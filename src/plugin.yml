@@ -1,0 +1,6 @@
+name: SWAT
+main: com.division.swat.core.SWAT
+version: 0.0.1D
+description: Implements the Battlegrounds API to simulate a SWAT gametype
+authors: [Mastershake71]
+depend: [Battlegrounds]
