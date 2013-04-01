@@ -42,14 +42,14 @@ public class SWATBattleground extends Battleground {
 
     private Set<Player> teamRed = new HashSet<Player>();
     private Set<Player> teamBlue = new HashSet<Player>();
-    private int teamRedScore = 0;
-    private int teamBlueScore = 0;
+    private SWATGametype SWgametype;
 
     public SWATBattleground(String name, Gametype gametype, Region region) {
         super(name, gametype, region);
         this.setMinPlayers(SWConfig.getMinPlayers());
         this.setMaxPlayers(SWConfig.getMaxPlayers());
         this.setDynamic(true);
+        this.SWgametype = (SWATGametype) gametype;
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -98,32 +98,9 @@ public class SWATBattleground extends Battleground {
         }
         evt.getDrops().clear();
         if (teamRed.contains(player)) {
-            teamBlueScore++;
+            SWgametype.incrementRedScore();
         } else {
-            teamRedScore++;
-        }
-        runWinCheck();
-    }
-
-    private void runWinCheck() {
-        //TODO Code SWConfig to handle real stuff.
-        String teamWin = "";
-        int winScore = 0;
-        int loseScore = 0;
-        if (teamRedScore == SWConfig.getScoreLimit()) {
-            teamWin = "Red Team";
-            winScore = teamRedScore;
-            loseScore = teamBlueScore;
-        }
-        if (teamBlueScore == SWConfig.getScoreLimit()) {
-            teamWin = "Blue Team";
-            winScore = teamBlueScore;
-            loseScore = teamRedScore;
-        }
-        if (!teamWin.equals("")) {
-            RoundEndEvent evt = new RoundEndEvent(this);
-            Bukkit.getServer().getPluginManager().callEvent(evt);
-            Bukkit.getServer().broadcastMessage(getGametype().format(new Object[]{teamWin, winScore, loseScore}));
+            SWgametype.incrementBlueScore();
         }
     }
 
