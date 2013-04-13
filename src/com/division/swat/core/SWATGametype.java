@@ -28,10 +28,10 @@ public class SWATGametype extends Gametype {
     public void runWinConditions() {
         String teamWin = "";
         int loseScore = 0;
-        if (teamRedScore == SWConfig.getScoreLimit()) {
+        if (teamRedScore == winScore) {
             teamWin = "Red Team";
             loseScore = teamBlueScore;
-        } else if (teamBlueScore == SWConfig.getScoreLimit()) {
+        } else if (teamBlueScore == winScore) {
             teamWin = "Blue Team";
             loseScore = teamRedScore;
         }
@@ -41,13 +41,13 @@ public class SWATGametype extends Gametype {
             Bukkit.getServer().broadcastMessage(format(new Object[]{teamWin, winScore, loseScore}));
         }
     }
-    
-    public void incrementRedScore(){
+
+    public void incrementRedScore() {
         teamRedScore++;
         runWinConditions();
     }
-    
-    public void incrementBlueScore(){
+
+    public void incrementBlueScore() {
         teamBlueScore++;
         runWinConditions();
     }
