@@ -1,6 +1,7 @@
 package com.division.swat.core;
 
 import com.division.battlegrounds.core.Battleground;
+import com.division.battlegrounds.core.BattlegroundCore;
 import com.division.battlegrounds.core.BattlegroundPlayer;
 import com.division.battlegrounds.core.Gametype;
 import com.division.battlegrounds.event.BattlegroundJoinEvent;
@@ -16,7 +17,6 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
@@ -113,7 +113,6 @@ public class SWATBattleground extends Battleground {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerRespawn(PlayerRespawnEvent evt) {
-        //TODO Add spawnpoint code to config and region.
         Player player = evt.getPlayer();
         if (isPlayerInBattleground(player)) {
             System.out.println("[SWATBG] Attempting to respawn player: " + player.getName());
@@ -192,7 +191,7 @@ public class SWATBattleground extends Battleground {
             player.teleport(player.getWorld().getSpawnLocation());
             inv.setContents(crate.uncrateContents());
             inv.setArmorContents(crate.uncrateArmor());
-            player.sendMessage(ChatColor.GRAY + "[" + ChatColor.DARK_AQUA + "Battlegrounds" + ChatColor.GRAY + "]" + ChatColor.GREEN + " Your inventory from SWAT has been loaded");
+            BattlegroundCore.sendMessage(player, "Your inventory from SWAT has been loaded");
         }
     }
 

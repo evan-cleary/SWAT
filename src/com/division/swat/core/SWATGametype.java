@@ -30,6 +30,7 @@ public class SWATGametype extends Gametype {
 
     @Override
     public void initGametype() {
+        //TODO: Discover why this value is not holding. 
         this.winScore = SWConfig.getScoreLimit();
         initScoreboard();
     }
