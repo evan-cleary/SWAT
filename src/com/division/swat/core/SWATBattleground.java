@@ -42,14 +42,14 @@ public class SWATBattleground extends Battleground {
 
     private Set<Player> teamRed = new HashSet<Player>();
     private Set<Player> teamBlue = new HashSet<Player>();
-    private SWATGametype SWgametype;
+    private SWATGametype swGametype;
 
     public SWATBattleground(String name, Gametype gametype, Region region) {
         super(name, gametype, region);
         this.setMinPlayers(SWConfig.getMinPlayers());
         this.setMaxPlayers(SWConfig.getMaxPlayers());
         this.setDynamic(true);
-        this.SWgametype = (SWATGametype) gametype;
+        this.swGametype = (SWATGametype) gametype;
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -98,9 +98,9 @@ public class SWATBattleground extends Battleground {
         }
         evt.getDrops().clear();
         if (teamRed.contains(player)) {
-            SWgametype.incrementRedScore();
+            swGametype.incrementRedScore();
         } else {
-            SWgametype.incrementBlueScore();
+            swGametype.incrementBlueScore();
         }
     }
 
@@ -138,6 +138,7 @@ public class SWATBattleground extends Battleground {
             StorageManager.saveStorageCrate(evt.getPlayer().getInventory(), evt.getPlayer().getName());
             this.getQueue().remove(evt.getPlayer());
             this.sendToSpawnPoint(evt.getPlayer());
+            evt.getPlayer().setScoreboard(swGametype.getScoreboard());
         }
     }
 
@@ -154,23 +155,24 @@ public class SWATBattleground extends Battleground {
             if (rndBool) {
                 if (!(teamBlue.size() >= (this.getMinPlayers() / 2))) {
                     System.out.println("[SWATBG] Player: " + p.getName() + " has been added to blue team.");
-                    teamBlue.add(p);
+                    handleBlueJoin(p);
                 } else {
                     System.out.println("[SWATBG] Player: " + p.getName() + " has been added to red team.");
-                    teamRed.add(p);
+                    handleRedJoin(p);
                 }
             } else {
                 if (!(teamRed.size() >= (this.getMinPlayers() / 2))) {
                     System.out.println("[SWATBG] Player: " + p.getName() + " has been added to red team.");
-                    teamRed.add(p);
+                    handleRedJoin(p);
                 } else {
                     System.out.println("[SWATBG] Player: " + p.getName() + " has been added to blue team.");
-                    teamBlue.add(p);
+                    handleBlueJoin(p);
                 }
             }
             StorageManager.saveStorageCrate(p.getInventory(), p.getName());
             this.inBattleground.put(new BattlegroundPlayer(p.getName()), p.getLocation());
             this.getQueue().remove(p);
+            p.setScoreboard(swGametype.getScoreboard());
         }
         Set<BattlegroundPlayer> inGamePlayers = this.inBattleground.keySet();
         System.out.println("Got to spawn code.");
@@ -190,7 +192,7 @@ public class SWATBattleground extends Battleground {
             player.teleport(player.getWorld().getSpawnLocation());
             inv.setContents(crate.uncrateContents());
             inv.setArmorContents(crate.uncrateArmor());
-            player.sendMessage(ChatColor.GRAY + "[" + ChatColor.DARK_AQUA + "Battlegrounds" + ChatColor.GRAY + "]" + ChatColor.GREEN + "Your inventory from SWAT has been loaded");
+            player.sendMessage(ChatColor.GRAY + "[" + ChatColor.DARK_AQUA + "Battlegrounds" + ChatColor.GRAY + "]" + ChatColor.GREEN + " Your inventory from SWAT has been loaded");
         }
     }
 
@@ -200,9 +202,13 @@ public class SWATBattleground extends Battleground {
             Set<BattlegroundPlayer> bgPlayers = this.inBattleground.keySet();
             for (BattlegroundPlayer bgPlayer : bgPlayers) {
                 bgPlayer.getPlayer().teleport(inBattleground.get(bgPlayer));
+                bgPlayer.getPlayer().setScoreboard(Bukkit.getServer().getScoreboardManager().getMainScoreboard());
                 this.loadOfflineStorage(bgPlayer.getPlayer());
             }
             this.inBattleground.clear();
+            teamRed.clear();
+            teamBlue.clear();
+            swGametype.resetScoreboard();
         }
     }
 
@@ -250,19 +256,29 @@ public class SWATBattleground extends Battleground {
         inv.addItem(new ItemStack(Material.ARROW, 64));
     }
 
+    private void handleRedJoin(Player player) {
+        player.setScoreboard(swGametype.getScoreboard());
+        teamRed.add(player);
+    }
+
+    private void handleBlueJoin(Player player) {
+        player.setScoreboard(swGametype.getScoreboard());
+        teamBlue.add(player);
+    }
+
     public void distributeToTeam(Player player) {
         int redCount = teamRed.size();
         int blueCount = teamBlue.size();
         if (redCount > blueCount) {
-            teamBlue.add(player);
+            handleBlueJoin(player);
         } else if (blueCount > redCount) {
-            teamRed.add(player);
+            handleRedJoin(player);
         } else {
             Random rand = new Random();
             if (rand.nextBoolean()) {
-                teamBlue.add(player);
+                handleBlueJoin(player);
             } else {
-                teamRed.add(player);
+                handleRedJoin(player);
             }
         }
     }
