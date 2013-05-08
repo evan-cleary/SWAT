@@ -1,7 +1,6 @@
 package com.division.swat.core;
 
 import com.division.battlegrounds.core.Battleground;
-import com.division.battlegrounds.core.BattlegroundCore;
 import com.division.battlegrounds.core.BattlegroundPlayer;
 import com.division.battlegrounds.core.Gametype;
 import com.division.battlegrounds.event.BattlegroundJoinEvent;
@@ -10,8 +9,6 @@ import com.division.battlegrounds.event.RoundEndEvent;
 import com.division.battlegrounds.event.RoundStartEvent;
 import com.division.battlegrounds.mech.FriendlyFireBypass;
 import com.division.battlegrounds.region.Region;
-import com.division.battlegrounds.storage.StorageManager;
-import com.division.battlegrounds.storage.SupplyCrate;
 import com.division.swat.config.SWConfig;
 import java.util.HashSet;
 import java.util.Random;
@@ -29,7 +26,6 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -50,11 +46,6 @@ public class SWATBattleground extends Battleground {
         this.setMaxPlayers(SWConfig.getMaxPlayers());
         this.setDynamic(true);
         this.swGametype = (SWATGametype) gametype;
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onPlayerJoin(PlayerJoinEvent evt) {
-        loadOfflineStorage(evt.getPlayer());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -124,7 +115,6 @@ public class SWATBattleground extends Battleground {
     @EventHandler(priority = EventPriority.NORMAL)
     public void onBattlegroundLeave(BattlegroundQuitEvent evt) {
         if (evt.getBattleground() == this) {
-            loadOfflineStorage(evt.getPlayer());
             evt.getPlayer().setHealth(20);
             evt.getPlayer().setFoodLevel(20);
         }
@@ -134,7 +124,6 @@ public class SWATBattleground extends Battleground {
     public void onBattlegroundJoin(BattlegroundJoinEvent evt) {
         if (evt.getBattleground() == this) {
             distributeToTeam(evt.getPlayer());
-            StorageManager.saveStorageCrate(evt.getPlayer().getInventory(), evt.getPlayer().getName());
             this.getQueue().remove(evt.getPlayer());
             this.sendToSpawnPoint(evt.getPlayer());
             evt.getPlayer().setScoreboard(swGametype.getScoreboard());
@@ -168,7 +157,6 @@ public class SWATBattleground extends Battleground {
                     handleBlueJoin(p);
                 }
             }
-            StorageManager.saveStorageCrate(p.getInventory(), p.getName());
             this.inBattleground.put(new BattlegroundPlayer(p.getName()), p.getLocation());
             this.getQueue().remove(p);
             p.setScoreboard(swGametype.getScoreboard());
@@ -182,29 +170,9 @@ public class SWATBattleground extends Battleground {
         System.out.println("Got past spawn code.");
     }
 
-    public void loadOfflineStorage(Player player) {
-        PlayerInventory inv = player.getInventory();
-        inv.clear();
-        inv.setArmorContents(new ItemStack[inv.getArmorContents().length]);
-        SupplyCrate crate = StorageManager.loadStorageCrate(player.getName());
-        if (crate != null) {
-            player.teleport(player.getWorld().getSpawnLocation());
-            inv.setContents(crate.uncrateContents());
-            inv.setArmorContents(crate.uncrateArmor());
-            BattlegroundCore.sendMessage(player, "Your inventory from SWAT has been loaded");
-        }
-    }
-
     @EventHandler(priority = EventPriority.NORMAL)
     public void handleRoundEnd(RoundEndEvent evt) {
         if (evt.getBattleground() == this) {
-            Set<BattlegroundPlayer> bgPlayers = this.inBattleground.keySet();
-            for (BattlegroundPlayer bgPlayer : bgPlayers) {
-                bgPlayer.getPlayer().teleport(inBattleground.get(bgPlayer));
-                bgPlayer.getPlayer().setScoreboard(Bukkit.getServer().getScoreboardManager().getMainScoreboard());
-                this.loadOfflineStorage(bgPlayer.getPlayer());
-            }
-            this.inBattleground.clear();
             teamRed.clear();
             teamBlue.clear();
             swGametype.resetScoreboard();
